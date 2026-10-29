@@ -219,4 +219,11 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
+# SQLite database
+data/*.db
+data/*.sqlite3
+
+# ChromaDB persistent storage
+data/chroma_db/
+
 
