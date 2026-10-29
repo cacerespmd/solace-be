@@ -1,5 +1,6 @@
 from unittest.mock import Mock
 
+import chromadb
 import pytest
 from fastapi import HTTPException
 from sqlalchemy import create_engine, select
@@ -69,3 +70,55 @@ def test_failed_update_preserves_saved_link(db, monkeypatch):
             document_url="https://docs.google.com/document/d/replacement/edit",
         ), db, None)
     assert document.document_url == original_url
+
+
+def test_delete_removes_only_target_document_chunks(db, monkeypatch, tmp_path):
+    monkeypatch.setattr(api, "ingest_product_document", Mock())
+    document = api.create_product_document(1, payload(), db, None)
+    other = api.create_product_document(1, payload(), db, None)
+    document_id = document.id
+    collection = chromadb.PersistentClient(path=str(tmp_path)).create_collection("delete_test")
+    collection.add(
+        ids=["target_0", "target_1", "other_0"],
+        embeddings=[[1.0, 0.0]] * 3,
+        documents=["Warranty", "Exclusions", "Other document"],
+        metadatas=[{"document_id": document_id}, {"document_id": document_id},
+                   {"document_id": other.id}],
+    )
+    monkeypatch.setattr(api, "get_collection", lambda: collection)
+    api.delete_product_document(1, document_id, db, None)
+    assert db.get(ProductDocument, document_id) is None
+    assert db.get(ProductDocument, other.id) is other
+    assert collection.get()["ids"] == ["other_0"]
+
+
+def test_delete_failure_keeps_database_record(db, monkeypatch):
+    monkeypatch.setattr(api, "ingest_product_document", Mock())
+    document = api.create_product_document(1, payload(), db, None)
+    collection = Mock()
+    collection.delete.side_effect = RuntimeError("Index unavailable")
+    monkeypatch.setattr(api, "get_collection", lambda: collection)
+    with pytest.raises(HTTPException) as caught:
+        api.delete_product_document(1, document.id, db, None)
+    assert caught.value.status_code == 503
+    assert db.get(ProductDocument, document.id) is document
+
+
+def test_delete_wrong_product_does_not_touch_index(db, monkeypatch):
+    monkeypatch.setattr(api, "ingest_product_document", Mock())
+    document = api.create_product_document(1, payload(), db, None)
+    get_collection = Mock()
+    monkeypatch.setattr(api, "get_collection", get_collection)
+    with pytest.raises(HTTPException) as caught:
+        api.delete_product_document(999, document.id, db, None)
+    assert caught.value.status_code == 404
+    get_collection.assert_not_called()
+
+
+def test_delete_document_without_indexed_chunks(db, monkeypatch):
+    monkeypatch.setattr(api, "ingest_product_document", Mock())
+    document = api.create_product_document(1, payload(), db, None)
+    document_id = document.id
+    monkeypatch.setattr(api, "get_collection", Mock(return_value=Mock()))
+    api.delete_product_document(1, document_id, db, None)
+    assert db.get(ProductDocument, document_id) is None

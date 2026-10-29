@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.ai.knowledge import ingest_product_document
+from app.ai.knowledge import get_collection, ingest_product_document
 from app.models import Admin, Product, ProductDocument
 from app.core.dependencies import get_current_admin
 from app.schemas.product_document import (
@@ -160,6 +160,18 @@ def delete_product_document(
 
     if document is None:
         raise HTTPException(status_code=404, detail="Document not found")
+
+    try:
+        # Delete from the index first so a failed cleanup cannot leave a
+        # successfully deleted document searchable. Repeating this is safe.
+        get_collection().delete(where={"document_id": document.id})
+    except Exception as exc:
+        db.rollback()
+        logger.exception("Document index cleanup failed")
+        raise HTTPException(
+            status_code=503,
+            detail="Document could not be deleted from the search index. Please try again.",
+        ) from exc
 
     db.delete(document)
     db.commit()
