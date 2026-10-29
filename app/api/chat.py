@@ -1,3 +1,4 @@
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException
 from openai import OpenAIError
@@ -9,6 +10,8 @@ from app.database import get_db
 from app.models import Customer
 from app.schemas.chat import ChatRequest, ChatResponse
 
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/api/chat",
@@ -35,14 +38,26 @@ def chat(
             products=result.get("products", []),
         )
 
-    except OpenAIError:
+    except OpenAIError as e:
+        logger.exception("OpenAI API error")
+
         raise HTTPException(
             status_code=503,
             detail="AI support is temporarily unavailable",
-        )
+        ) from e
 
-    except RuntimeError:
+    except RuntimeError as e:
+        logger.exception("AI service runtime error")
+
         raise HTTPException(
             status_code=503,
             detail="AI support could not complete the request",
-        )
+        ) from e
+
+    except Exception as e:
+        logger.exception("Unexpected chat endpoint error")
+
+        raise HTTPException(
+            status_code=500,
+            detail="An unexpected error occurred",
+        ) from e
