@@ -18,6 +18,7 @@ from app.api.knowledge import router as knowledge_router
 from app.api.chat import router as chat_router
 from app.api.support_tickets import router as support_tickets_router
 from app.api.admin.orders import router as admin_orders_router
+from app.api.admin.customers import router as admin_customers_router
 from app.api import support_tickets
 from app.api.admin_support_tickets import router as admin_support_tickets_router
 
@@ -46,6 +47,7 @@ app.include_router(knowledge_router)
 app.include_router(chat_router)
 app.include_router(support_tickets_router)
 app.include_router(admin_orders_router)
+app.include_router(admin_customers_router)
 app.include_router(support_tickets.router)
 app.include_router(admin_support_tickets_router)
 
