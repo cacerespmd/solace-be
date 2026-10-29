@@ -1,0 +1,49 @@
+
+{
+  "store_name": "SOLACE Demo Store",
+  "document_type": "demo_store_policies",
+  "is_official": false,
+  "version": "1.0",
+  "policies": [
+    {
+      "id": "returns",
+      "title": "Returns and Exchanges",
+      "content": "DEMONSTRATION POLICY — NOT AN OFFICIAL STORE POLICY. For the SOLACE demo store, customers may request a return within 7 calendar days after receiving an order. Returns may be considered for damaged, defective, or incorrect items. The customer should provide the order number, a description of the issue, and supporting photos if available. Return requests are subject to review and are not automatically approved."
+    },
+    {
+      "id": "refunds",
+      "title": "Refunds",
+      "content": "DEMONSTRATION POLICY — NOT AN OFFICIAL STORE POLICY. For the SOLACE demo store, refunds are reviewed after a return or refund request has been assessed. Refund approval is not guaranteed. The demo does not define a guaranteed refund processing time. SOLACE must not promise that a refund has been issued or will arrive on a specific date."
+    },
+    {
+      "id": "cancellations",
+      "title": "Order Cancellations",
+      "content": "DEMONSTRATION POLICY — NOT AN OFFICIAL STORE POLICY. For the SOLACE demo store, cancellation requests may be considered while an order is pending and has not shipped. A cancellation request does not mean the order is cancelled. SOLACE cannot cancel an order unless an authorized cancellation tool is implemented and successfully executes the action."
+    },
+    {
+      "id": "shipping",
+      "title": "Shipping and Delivery",
+      "content": "DEMONSTRATION POLICY — NOT AN OFFICIAL STORE POLICY. For the SOLACE demo store, customers can check their order and delivery status through their account or by asking SOLACE. Delivery statuses may include pending, shipped, out for delivery, delivered, received, and failed. Delivery dates are not guaranteed unless an estimated date is provided by an authorized source."
+    },
+    {
+      "id": "warranty",
+      "title": "Warranty Assistance",
+      "content": "DEMONSTRATION POLICY — NOT AN OFFICIAL STORE POLICY. Warranty coverage depends on the specific product and its verified documentation. Customers should refer to the product's warranty document for coverage and exclusions. SOLACE must not invent warranty periods, coverage, or manufacturer obligations."
+    },
+    {
+      "id": "damaged_items",
+      "title": "Damaged, Defective, or Incorrect Items",
+      "content": "DEMONSTRATION POLICY — NOT AN OFFICIAL STORE POLICY. For the SOLACE demo workflow, a product defect ticket may be submitted only after the customer has confirmed receipt of the order. The customer must confirm before SOLACE creates a ticket. Shipping-related issues, such as missing or failed deliveries, may be reported before receipt. Ticket creation requires an authorized backend tool."
+    },
+    {
+      "id": "payments",
+      "title": "Payment Methods",
+      "content": "DEMONSTRATION INFORMATION — PAYMENT METHODS NOT YET CONFIGURED. SOLACE does not currently have verified information about accepted payment methods. Customers should not be told that cash on delivery, GCash, bank transfer, or credit card payments are supported unless those methods have been implemented and confirmed."
+    },
+    {
+      "id": "human_support",
+      "title": "Human Support and Escalation",
+      "content": "DEMONSTRATION POLICY — NOT AN OFFICIAL STORE POLICY. Customers may ask for human assistance. SOLACE should explain that human escalation is available only when the relevant support workflow is implemented. It must not claim that a human agent has been contacted or a ticket created unless an authorized tool confirms the action."
+    }
+  ]
+}

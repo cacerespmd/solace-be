@@ -1,0 +1,128 @@
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.models import Admin, Product, ProductDocument
+from app.core.dependencies import get_current_admin
+from app.schemas.product_document import (
+    ProductDocumentCreate,
+    ProductDocumentUpdate,
+    ProductDocumentResponse,
+)
+
+
+router = APIRouter(
+    prefix="/api/products",
+    tags=["Product Documents"],
+)
+
+
+@router.get(
+    "/{product_id}/documents",
+    response_model=list[ProductDocumentResponse],
+)
+def list_product_documents(
+    product_id: int,
+    db: Session = Depends(get_db),
+    admin: Admin = Depends(get_current_admin),
+):
+    product = db.get(Product, product_id)
+
+    if product is None:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    return db.scalars(
+        select(ProductDocument)
+        .where(ProductDocument.product_id == product_id)
+        .order_by(ProductDocument.id.desc())
+    ).all()
+
+
+@router.post(
+    "/{product_id}/documents",
+    response_model=ProductDocumentResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_product_document(
+    product_id: int,
+    payload: ProductDocumentCreate,
+    db: Session = Depends(get_db),
+    admin: Admin = Depends(get_current_admin),
+):
+    product = db.get(Product, product_id)
+
+    if product is None:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    document = ProductDocument(
+        product_id=product_id,
+        **payload.model_dump(mode="json"),
+    )
+
+    db.add(document)
+    db.commit()
+    db.refresh(document)
+
+    return document
+
+
+@router.patch(
+    "/{product_id}/documents/{document_id}",
+    response_model=ProductDocumentResponse,
+)
+def update_product_document(
+    product_id: int,
+    document_id: int,
+    payload: ProductDocumentUpdate,
+    db: Session = Depends(get_db),
+    admin: Admin = Depends(get_current_admin),
+):
+    document = db.scalar(
+        select(ProductDocument).where(
+            ProductDocument.id == document_id,
+            ProductDocument.product_id == product_id,
+        )
+    )
+
+    if document is None:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    updates = payload.model_dump(exclude_unset=True, mode="json")
+
+    for field, value in updates.items():
+        if value is None:
+            raise HTTPException(
+                status_code=422,
+                detail=f"{field} cannot be null",
+            )
+        setattr(document, field, value)
+
+    db.commit()
+    db.refresh(document)
+
+    return document
+
+
+@router.delete("/{product_id}/documents/{document_id}")
+def delete_product_document(
+    product_id: int,
+    document_id: int,
+    db: Session = Depends(get_db),
+    admin: Admin = Depends(get_current_admin),
+):
+    document = db.scalar(
+        select(ProductDocument).where(
+            ProductDocument.id == document_id,
+            ProductDocument.product_id == product_id,
+        )
+    )
+
+    if document is None:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    db.delete(document)
+    db.commit()
+
+    return {"message": "Product document deleted successfully"}
