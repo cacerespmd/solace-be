@@ -1,3 +1,4 @@
+
 import argparse
 import subprocess
 import sys
@@ -35,15 +36,22 @@ def main():
         help="Run registered seeders after fresh migration.",
     )
 
+    parser.add_argument(
+        "--yes",
+        action="store_true",
+        help="Skip confirmation prompt.",
+    )
+
     args = parser.parse_args()
 
     print("WARNING: All existing database records will be deleted.")
 
-    confirmation = input("Type 'yes' to continue: ")
+    if not args.yes:
+        confirmation = input("Type 'yes' to continue: ")
 
-    if confirmation.strip().lower() != "yes":
-        print("Operation cancelled.")
-        return
+        if confirmation.strip().lower() != "yes":
+            print("Operation cancelled.")
+            return
 
     fresh_database()
 
