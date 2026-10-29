@@ -340,6 +340,15 @@ def ingest_product_document(document, product):
             "No searchable content found"
         )
 
+    # Include product identity in every embedding so later chunks remain
+    # discoverable even when the body does not repeat the product name.
+    embedding_inputs = [
+        "Product: {}\nDocument: {}\n\n{}".format(
+            product.name, document.title, chunk,
+        )
+        for chunk in chunks
+    ]
+
     # Generate embeddings.
     openai_client = OpenAI(
         api_key=settings.OPENAI_API_KEY
@@ -348,7 +357,7 @@ def ingest_product_document(document, product):
     embedding_response = (
         openai_client.embeddings.create(
             model=settings.OPENAI_EMBEDDING_MODEL,
-            input=chunks,
+            input=embedding_inputs,
         )
     )
 

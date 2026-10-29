@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.models import Order, PendingSupportAction
 from app.ai.retrieval import (
+    resolve_product_ids,
     search_product_knowledge,
     search_store_knowledge,
 )
@@ -108,6 +109,10 @@ PRODUCT DOCUMENTATION RULES:
 19. When documentation identifies itself as
     demonstration or unofficial material,
     communicate that limitation.
+    Summarize the stated sample terms when relevant, explicitly labeling
+    them as sample terms rather than verified manufacturer coverage.
+    Do not say warranty information is absent when sample terms are provided.
+    Manufacturer warranty terms do not establish a separate store warranty.
 
 ORDER RULES:
 
@@ -1099,7 +1104,8 @@ def generate_ai_response(
     # 1. RETRIEVE PRODUCT DOCUMENTATION
     # --------------------------------------
 
-    matches = search_product_knowledge(message)
+    product_ids = resolve_product_ids(message, db)
+    matches = search_product_knowledge(message, product_ids=product_ids)
     policy_matches = search_store_knowledge(message)
 
     context_parts = []
