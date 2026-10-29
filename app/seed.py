@@ -1,6 +1,7 @@
 
 from scripts.seed_admin import seed_admin
-from scripts.seed_customer  import seed_customers
+from scripts.seed_customer import seed_customers
+from scripts.seed_products import seed_products
 
 
 def seed_database():
@@ -9,6 +10,7 @@ def seed_database():
     seeders = [
         seed_admin,
         seed_customers,
+        seed_products,
     ]
 
     for seeder in seeders:

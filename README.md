@@ -87,6 +87,17 @@ To create the bundled demo admin and customers, run:
 python -m app.seed
 ```
 
+This also seeds a small product catalog based on listings from the
+[DataBlitz online store](https://ecommerce.datablitz.com.ph/). Prices and
+product images are snapshots and may change; seeded stock is demo inventory,
+not live store availability. To seed products on their own, run:
+
+```bash
+python -m scripts.seed_products
+```
+
+Existing products with matching SKUs are left unchanged.
+
 The demo accounts use hard-coded sample credentials in
 [`scripts/seed_admin.py`](scripts/seed_admin.py) and
 [`scripts/seed_customer.py`](scripts/seed_customer.py). Use these only in a
@@ -102,4 +113,4 @@ python -m scripts.index_store_policies
 
 **Warning:** `python fresh_db.py` drops all existing database tables before
 recreating them. Use it only when you intend to erase the database. Add `--seed`
-to also load the demo accounts.
+to also load demo accounts and products.
