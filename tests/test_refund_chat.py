@@ -83,3 +83,43 @@ def test_refund_does_not_access_another_customers_order(db):
     )
     assert "couldn't find" in result["reply"]
     assert session.scalar(select(SupportTicket)) is None
+
+
+def test_return_issue_creates_ticket_and_repeated_request_reuses_it(db):
+    session, customer_id, order = db
+    session.autoflush = False
+    message = f"I want to return my order {order.order_number}. It is not turning on."
+    first = generate_ai_response(message, session, customer_id)
+    ticket = session.scalar(select(SupportTicket))
+    assert ticket.category == "return_request"
+    assert ticket.description == message
+    assert f"#{ticket.id}" in first["reply"]
+    repeated = generate_ai_response(f"REturn my order {order.order_number}", session, customer_id)
+    assert f"already has ticket #{ticket.id}" in repeated["reply"]
+    assert len(session.scalars(select(SupportTicket)).all()) == 1
+
+
+def test_return_followup_remembers_order(db):
+    session, customer_id, order = db
+    first = generate_ai_response(f"Return my order {order.order_number}", session, customer_id)
+    assert "What went wrong" in first["reply"]
+    with Session(session.get_bind()) as followup:
+        result = generate_ai_response("It is not turning on.", followup, customer_id)
+        ticket = followup.scalar(select(SupportTicket))
+        assert ticket.category == "return_request"
+        assert ticket.order_id == order.id
+        assert f"#{ticket.id}" in result["reply"]
+
+
+@pytest.mark.parametrize("received, own_order", [(False, True), (True, False)])
+def test_return_enforces_receipt_and_ownership(db, received, own_order):
+    session, customer_id, order = db
+    if not received:
+        order.delivery.status = "delivered"
+        session.commit()
+    result = generate_ai_response(
+        f"Return my order {order.order_number}. It is not turning on.",
+        session, customer_id if own_order else customer_id + 1,
+    )
+    assert ("confirm receipt" if own_order else "couldn't find") in result["reply"]
+    assert session.scalar(select(SupportTicket)) is None
